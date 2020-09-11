@@ -1,5 +1,6 @@
 import socket
 import socketserver
+import time
 
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
@@ -15,18 +16,23 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         self.data = self.request.recv(1024).decode().splitlines()
         print("{} wrote:".format(self.client_address[0]))
         print(self.data)
-        # self.payload = {
-        #     'device_id': self.data[0],
-        #     'identity_id': self.data[1],
-        #     # 'sample_id': data.split('\r')[2].split('|')[0].split(':')[1],
-        #     # 'atm_temp': '',
-        #     # 'soil_temp': ''
-        #     'data': self.data[-2]
-        # }
+        self.content = {
+            'device_id': self.data[0],
+            'identity_id': self.data[1],
+            # 'sample_id': data.split('\r')[2].split('|')[0].split(':')[1],
+            # 'atm_temp': '',
+            # 'soil_temp': ''
+            'data': self.data[-2]
+        }
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             # Connect to server and send data
             sock.connect((ServerHOST, ServerPORT))
-            sock.sendall(bytes(self.data[-2] + "\n", "utf-8"))
+            payload = [
+                '005', 'WORLDFUL', self.content['device_id'],
+                time.strftime("%Y-%m-%d %H:%M", time.localtime()), '494C,8F7D'  
+                # TODO #1
+            ]
+            sock.sendall(bytes(','.join(payload), "utf-8"))
 
             # Receive data from the server and shut down
             # received = str(sock.recv(1024), "utf-8")
